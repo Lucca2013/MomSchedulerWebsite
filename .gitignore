@@ -1,1 +1,7 @@
-appointments.db
+node_modules/
+.env
+*.log
+*.sqlite
+.DS_Store
+.idea/
+.vscode/
