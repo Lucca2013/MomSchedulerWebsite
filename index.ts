@@ -4,8 +4,13 @@ import bodyParser from 'body-parser';
 import Database from 'better-sqlite3';
 
 const app = express();
-const PORT = 3000;
-const db = new Database('appointments.db');
+const PORT = process.env.PORT || 3000;
+
+const dbPath = process.env.NODE_ENV === 'production'
+  ? '/tmp/appointments.db'
+  : 'appointments.db';
+
+const db = new Database(dbPath);
 
 db.prepare(`
   CREATE TABLE IF NOT EXISTS appointments (
@@ -18,8 +23,9 @@ db.prepare(`
   )
 `).run();
 
-app.use(bodyParser.json()); // Para processar JSON
-app.use(bodyParser.urlencoded({ extended: true })); // Para forms tradicionais
+app.use(express.static(path.join(__dirname, 'templates')));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get('/', (_req, res) => {
   res.sendFile(path.join(__dirname, 'templates', 'index.html'));
