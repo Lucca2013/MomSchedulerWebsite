@@ -5,7 +5,7 @@
   "type": "commonjs",
   "scripts": {
     "start": "node index.js",
-    "build": "npm tsc",
+    "build": "echo 'No build step'",
     "dev": "node index.js",
     "vercel-build": "npm run build"
   },
