@@ -5,7 +5,7 @@
   "type": "commonjs",
   "scripts": {
     "start": "node index.js",
-    "build": "npx tsc",
+    "build": "npm tsc",
     "dev": "node index.js",
     "vercel-build": "npm run build"
   },
