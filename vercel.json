@@ -3,13 +3,13 @@
   "builds": [
     {
       "src": "index.ts",
-      "use": "vercel@latest"  
+      "use": "node@18"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "index.ts"
+      "dest": "api/index.js"
     }
   ]
 }
