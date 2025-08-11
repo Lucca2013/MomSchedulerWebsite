@@ -1,17 +1,19 @@
-import express from 'express';
-import path from 'path';
-import bodyParser from 'body-parser';
-import Database from 'better-sqlite3';
+const express = require('express');
+const bodyParser = require('body-parser');
+const Database = require('better-sqlite3');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Configuração do banco de dados para produção/desenvolvimento
 const dbPath = process.env.NODE_ENV === 'production'
-  ? '/tmp/appointments.db'
+  ? path.join(process.cwd(), 'appointments.db') // Vercel usa sistema de arquivos efêmero
   : 'appointments.db';
 
 const db = new Database(dbPath);
 
+// Criação da tabela
 db.prepare(`
   CREATE TABLE IF NOT EXISTS appointments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -23,14 +25,17 @@ db.prepare(`
   )
 `).run();
 
+// Configurações do Express
 app.use(express.static(path.join(__dirname, 'templates')));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// Rota principal
 app.get('/', (_req, res) => {
   res.sendFile(path.join(__dirname, 'templates', 'index.html'));
 });
 
+// Rota para agendar
 app.post('/agendar', (req, res) => {
   try {
     console.log('Dados recebidos:', req.body);
@@ -62,11 +67,13 @@ app.post('/agendar', (req, res) => {
   }
 });
 
+// Rota para listar agendamentos
 app.get('/agendamentos', (_req, res) => {
   const agendamentos = db.prepare('SELECT * FROM appointments').all();
   res.json(agendamentos);
 });
 
+// Rota para deletar agendamento
 app.delete('/delete/:id', (req, res) => {
   const id = Number(req.params.id);
   if (isNaN(id)) {
@@ -79,6 +86,7 @@ app.delete('/delete/:id', (req, res) => {
   res.sendStatus(200);
 });
 
+// Rota para marcar como concluído
 app.put('/concluir/:id', (req, res) => {
   const id = req.params.id;
 
@@ -91,8 +99,7 @@ app.put('/concluir/:id', (req, res) => {
   res.sendStatus(200);
 });
 
+// Iniciar servidor
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
-
-export default app;
