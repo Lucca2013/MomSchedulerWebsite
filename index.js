@@ -26,13 +26,13 @@ db.prepare(`
 `).run();
 
 // Configurações do Express
-app.use(express.static(path.join(__dirname, 'templates')));
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Rota principal
 app.get('/', (_req, res) => {
-  res.sendFile(path.join(__dirname, 'templates', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Rota para agendar
