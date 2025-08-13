@@ -1,29 +1,36 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const Database = require('better-sqlite3');
 const path = require('path');
+const { Pool } = require('pg');
+require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Configuração do banco de dados para produção/desenvolvimento
-const dbPath = process.env.NODE_ENV === 'production'
-  ? path.join(process.cwd(), 'appointments.db') // Vercel usa sistema de arquivos efêmero
-  : 'appointments.db';
+// Conexão com PostgreSQL (funciona com Neon também)
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false } // Necessário para Neon
+});
 
-const db = new Database(dbPath);
-
-// Criação da tabela
-db.prepare(`
-  CREATE TABLE IF NOT EXISTS appointments (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    titulo TEXT NOT NULL,
-    descricao TEXT NOT NULL,
-    horario TEXT NOT NULL,
-    prioridade TEXT NOT NULL,
-    concluded BOOLEAN NOT NULL DEFAULT 0
-  )
-`).run();
+// Criação da tabela (se não existir)
+(async () => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS appointments (
+        id SERIAL PRIMARY KEY,
+        titulo TEXT NOT NULL,
+        descricao TEXT NOT NULL,
+        horario TEXT NOT NULL,
+        prioridade TEXT NOT NULL,
+        concluded BOOLEAN NOT NULL DEFAULT FALSE
+      )
+    `);
+    console.log('Tabela "appointments" pronta.');
+  } catch (err) {
+    console.error('Erro ao criar tabela:', err);
+  }
+})();
 
 // Configurações do Express
 app.use(express.static(path.join(__dirname, 'public')));
@@ -36,7 +43,7 @@ app.get('/', (_req, res) => {
 });
 
 // Rota para agendar
-app.post('/agendar', (req, res) => {
+app.post('/agendar', async (req, res) => {
   try {
     console.log('Dados recebidos:', req.body);
 
@@ -47,20 +54,16 @@ app.post('/agendar', (req, res) => {
       return res.status(400).json({ error: 'Dados incompletos' });
     }
 
-    const stmt = db.prepare(`
-      INSERT INTO appointments (titulo, descricao, horario, prioridade) 
-      VALUES (?, ?, ?, ?)
-    `);
+    const insertQuery = `
+      INSERT INTO appointments (titulo, descricao, horario, prioridade)
+      VALUES ($1, $2, $3, $4)
+      RETURNING *
+    `;
 
-    const info = stmt.run(titulo, descricao, data, prioridade);
+    const result = await pool.query(insertQuery, [titulo, descricao, data, prioridade]);
 
-    // Buscar o agendamento recém-criado
-    const novoAgendamento = db.prepare(`
-      SELECT * FROM appointments WHERE id = ?
-    `).get(info.lastInsertRowid);
-
-    console.log('Agendamento criado:', novoAgendamento);
-    res.json(novoAgendamento);
+    console.log('Agendamento criado:', result.rows[0]);
+    res.json(result.rows[0]);
   } catch (error) {
     console.error('Erro ao agendar:', error);
     res.status(500).json({ error: 'Erro interno no servidor' });
@@ -68,35 +71,52 @@ app.post('/agendar', (req, res) => {
 });
 
 // Rota para listar agendamentos
-app.get('/agendamentos', (_req, res) => {
-  const agendamentos = db.prepare('SELECT * FROM appointments').all();
-  res.json(agendamentos);
+app.get('/agendamentos', async (_req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM appointments ORDER BY id ASC');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Erro ao buscar agendamentos:', error);
+    res.status(500).json({ error: 'Erro interno no servidor' });
+  }
 });
 
 // Rota para deletar agendamento
-app.delete('/delete/:id', (req, res) => {
-  const id = Number(req.params.id);
-  if (isNaN(id)) {
-    return res.status(400).send('ID inválido');
+app.delete('/delete/:id', async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).send('ID inválido');
+    }
+
+    const result = await pool.query('DELETE FROM appointments WHERE id = $1', [id]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).send('Agendamento não encontrado');
+    }
+
+    res.sendStatus(200);
+  } catch (error) {
+    console.error('Erro ao deletar agendamento:', error);
+    res.status(500).json({ error: 'Erro interno no servidor' });
   }
-  const info = db.prepare('DELETE FROM appointments WHERE id = ?').run(id);
-  if (info.changes === 0) {
-    return res.status(404).send('Agendamento não encontrado');
-  }
-  res.sendStatus(200);
 });
 
 // Rota para marcar como concluído
-app.put('/concluir/:id', (req, res) => {
-  const id = req.params.id;
+app.put('/concluir/:id', async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).send('ID inválido');
+    }
 
-  db.prepare(`
-    UPDATE appointments 
-    SET concluded = 1 
-    WHERE id = ?
-  `).run(id);
+    await pool.query('UPDATE appointments SET concluded = TRUE WHERE id = $1', [id]);
 
-  res.sendStatus(200);
+    res.sendStatus(200);
+  } catch (error) {
+    console.error('Erro ao concluir agendamento:', error);
+    res.status(500).json({ error: 'Erro interno no servidor' });
+  }
 });
 
 // Iniciar servidor
