@@ -119,7 +119,10 @@ app.put('/concluir/:id', async (req, res) => {
   }
 });
 
-// Iniciar servidor
-app.listen(PORT, () => {
-  console.log(`Servidor rodando em http://localhost:${PORT}`);
-});
+module.exports = app;
+// Inicia o servidor apenas localmente
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Servidor rodando localmente em http://localhost:${PORT}`);
+  });
+}
