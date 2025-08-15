@@ -4,10 +4,22 @@ const path = require('path');
 const { Pool } = require('pg');
 require('dotenv').config();
 const session = require('express-session');
-const pgSession = require('connect-pg-simple')(session);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+app.set('trust proxy', 1); 
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'chave-secreta',
+  resave: false,
+  saveUninitialized: true,
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: 100 * 365 * 24 * 60 * 60 * 1000
+  }
+}));
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -17,26 +29,6 @@ const pool = new Pool({
   }
 });
 
-app.set('trust proxy', 1);
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'chave-secreta',
-  resave: false,
-  saveUninitialized: false,
-  store: new pgSession({
-    pool: pool,
-    tableName: 'user_sessions',
-    createTableIfMissing: true
-  }),
-  cookie: {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 100 * 365 * 24 * 60 * 60 * 1000,
-    domain: process.env.COOKIE_DOMAIN || 'localhost'
-  }
-}));
-
-
 // Middlewares
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.json());
@@ -44,7 +36,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use((req, res, next) => {
   req.authenticate = () => !!req.session.user;
-
+  
   req.login = (user) => {
     req.session.user = user;
     return new Promise((resolve, reject) => {
@@ -54,7 +46,7 @@ app.use((req, res, next) => {
       });
     });
   };
-
+  
   req.logout = () => {
     return new Promise((resolve, reject) => {
       req.session.destroy(err => {
@@ -63,7 +55,7 @@ app.use((req, res, next) => {
       });
     });
   };
-
+  
   next();
 });
 
@@ -76,40 +68,17 @@ const checkAuth = (req, res, next) => {
 };
 
 app.get('/auth/status', (req, res) => {
-  // 1. Extrai o session ID do cookie connect.sid
-  const sessionId = req.sessionID;
-
-  // 2. Busca os dados da sessão no banco de dados
-  pool.query('SELECT sess FROM user_sessions WHERE sid = $1', [sessionId], (err, result) => {
-    if (err || !result.rows[0]) {
-      return res.json({ authenticated: false });
-    }
-
-    // 3. Extrai os dados do usuário da sessão armazenada
-    const sessionData = result.rows[0].sess;
-    const user = sessionData.user;
-
-    // 4. Verifica se os dados do usuário são válidos
-    if (user && user.id) {
-      // 5. Atualiza o objeto req.session para uso interno
-      req.session.user = user;
-
-      return res.json({
-        authenticated: true,
-        user: user
-      });
-    }
-
-    res.json({ authenticated: false });
-  });
+    res.json({
+        authenticated: !!req.session.user,
+        user: req.session.user
+    });
 });
 
 app.get('/', (req, res) => {
-  if (req.session.user) {
-    res.sendFile(path.join(__dirname, 'public', 'loged', 'index.html'));
-  } else {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  if (req.authenticate()) {
+    return res.redirect('/loged/index.html');
   }
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.get('/loged/index.html', (req, res) => {
@@ -139,9 +108,9 @@ app.post('/login', async (req, res) => {
       email: user.email
     });
 
-    res.json({
-      message: 'Login realizado com sucesso!',
-      user: req.session.user
+    res.json({ 
+      message: 'Login realizado com sucesso!', 
+      user: req.session.user 
     });
   } catch (error) {
     console.error('Erro ao realizar login:', error);
@@ -167,9 +136,9 @@ app.post('/register', async (req, res) => {
       [username, email, password]
     );
 
-    res.status(201).json({
-      message: 'Usuário cadastrado com sucesso!',
-      user: result.rows[0]
+    res.status(201).json({ 
+      message: 'Usuário cadastrado com sucesso!', 
+      user: result.rows[0] 
     });
   } catch (error) {
     console.error('Erro ao cadastrar usuário:', error);
@@ -246,9 +215,9 @@ app.delete('/delete/:id', checkAuth, async (req, res) => {
       return res.status(404).send('Agendamento não encontrado');
     }
 
-    res.json({
-      message: 'Agendamento deletado',
-      deleted: result.rows[0]
+    res.json({ 
+      message: 'Agendamento deletado', 
+      deleted: result.rows[0] 
     });
   } catch (error) {
     console.error('Erro ao deletar agendamento:', error);
