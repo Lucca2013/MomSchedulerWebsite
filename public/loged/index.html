@@ -698,6 +698,22 @@
             const raw = task.horario_iso || task.horario || task.data || task.date;
             return raw ? new Date(raw) : null;
         }
+        async function loadTasksWithRetry() {
+            let retries = 3;
+
+            while (retries > 0) {
+                try {
+                    await loadTasks();
+                    return;
+                } catch (error) {
+                    console.error(`Falha ao carregar tarefas (tentativas restantes: ${retries})`, error);
+                    retries--;
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+            }
+
+            showError('Não foi possível carregar as tarefas. Tente recarregar a página.');
+        }
 
         const btnPT = document.getElementById('btn-pt');
         const btnEN = document.getElementById('btn-en');
@@ -1108,7 +1124,7 @@
             document.getElementById('input-date').min = minDateTime;
 
             applyLanguage('pt');
-            loadTasks();
+            loadTasksWithRetry();
         });
 
     </script>

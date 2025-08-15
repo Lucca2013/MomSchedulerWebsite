@@ -4,22 +4,10 @@ const path = require('path');
 const { Pool } = require('pg');
 require('dotenv').config();
 const session = require('express-session');
+const pgSession = require('connect-pg-simple')(session);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-app.set('trust proxy', 1);
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'chave-secreta',
-  resave: false,
-  saveUninitialized: true,
-  cookie: {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 100 * 365 * 24 * 60 * 60 * 1000
-  }
-}));
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -28,6 +16,26 @@ const pool = new Pool({
     require: true
   }
 });
+
+app.set('trust proxy', 1);
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'chave-secreta',
+  resave: false,
+  saveUninitialized: false,
+  store: new pgSession({
+    pool: pool,
+    tableName: 'user_sessions',
+    createTableIfMissing: true
+  }),
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: 100 * 365 * 24 * 60 * 60 * 1000,
+    domain: process.env.COOKIE_DOMAIN || 'localhost'
+  }
+}));
+
 
 // Middlewares
 app.use(express.static(path.join(__dirname, 'public')));
@@ -68,9 +76,31 @@ const checkAuth = (req, res, next) => {
 };
 
 app.get('/auth/status', (req, res) => {
-  res.json({
-    authenticated: !!req.session.user,
-    user: req.session.user
+  // 1. Extrai o session ID do cookie connect.sid
+  const sessionId = req.sessionID;
+
+  // 2. Busca os dados da sessão no banco de dados
+  pool.query('SELECT sess FROM user_sessions WHERE sid = $1', [sessionId], (err, result) => {
+    if (err || !result.rows[0]) {
+      return res.json({ authenticated: false });
+    }
+
+    // 3. Extrai os dados do usuário da sessão armazenada
+    const sessionData = result.rows[0].sess;
+    const user = sessionData.user;
+
+    // 4. Verifica se os dados do usuário são válidos
+    if (user && user.id) {
+      // 5. Atualiza o objeto req.session para uso interno
+      req.session.user = user;
+
+      return res.json({
+        authenticated: true,
+        user: user
+      });
+    }
+
+    res.json({ authenticated: false });
   });
 });
 

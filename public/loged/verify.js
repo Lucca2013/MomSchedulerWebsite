@@ -1,25 +1,36 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // Verifica se já está na página de login
-  if (window.location.pathname === '/') return;
-  
-  fetch('/auth/status', {
-    credentials: 'include'
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (!data.authenticated) {
-      // Adiciona delay para evitar loop
-      setTimeout(() => {
+  const checkAuth = () => {
+    fetch('/auth/status', {
+      credentials: 'include'
+    })
+    .then(response => {
+      if (response.status === 401) {
+        throw new Error('Não autenticado');
+      }
+      return response.json();
+    })
+    .then(data => {
+      if (!data.authenticated) {
         window.location.href = '/';
-      }, 500);
-    } else {
-      document.body.style.display = 'flex';
-    }
-  })
-  .catch(error => {
-    console.error('Erro ao verificar login:', error);
-    setTimeout(() => {
+      } else {
+        document.body.style.display = 'flex';
+        // Força o carregamento das tarefas se não estiverem visíveis
+        if (document.getElementById('lista-tarefas').children.length === 0) {
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
+        }
+      }
+    })
+    .catch(error => {
+      console.error('Erro ao verificar login:', error);
       window.location.href = '/';
-    }, 1000);
-  });
+    });
+  };
+
+  // Primeira verificação
+  checkAuth();
+  
+  // Verificação adicional após 1 segundo
+  setTimeout(checkAuth, 1000);
 });
