@@ -747,10 +747,6 @@
                 loadingElement.style.display = 'flex';
 
                 const auth = await fetch('/auth/status').then(r => r.json());
-                if (!auth.authenticated) {
-                    window.location.href = '/';
-                    return;
-                }
                 currentUser = auth.user;
 
                 const response = await fetch(ENDPOINTS.LISTAR);
