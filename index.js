@@ -8,7 +8,7 @@ const session = require('express-session');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.set('trust proxy', 1); 
+app.set('trust proxy', 1);
 app.use(session({
   secret: process.env.SESSION_SECRET || 'chave-secreta',
   resave: false,
@@ -36,7 +36,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use((req, res, next) => {
   req.authenticate = () => !!req.session.user;
-  
+
   req.login = (user) => {
     req.session.user = user;
     return new Promise((resolve, reject) => {
@@ -46,7 +46,7 @@ app.use((req, res, next) => {
       });
     });
   };
-  
+
   req.logout = () => {
     return new Promise((resolve, reject) => {
       req.session.destroy(err => {
@@ -55,7 +55,7 @@ app.use((req, res, next) => {
       });
     });
   };
-  
+
   next();
 });
 
@@ -68,17 +68,18 @@ const checkAuth = (req, res, next) => {
 };
 
 app.get('/auth/status', (req, res) => {
-    res.json({
-        authenticated: !!req.session.user,
-        user: req.session.user
-    });
+  res.json({
+    authenticated: !!req.session.user,
+    user: req.session.user
+  });
 });
 
 app.get('/', (req, res) => {
-  if (req.authenticate()) {
-    return res.redirect('/loged/index.html');
+  if (req.session.user) {
+    res.sendFile(path.join(__dirname, 'public', 'loged', 'index.html'));
+  } else {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
   }
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.get('/loged/index.html', (req, res) => {
@@ -108,9 +109,9 @@ app.post('/login', async (req, res) => {
       email: user.email
     });
 
-    res.json({ 
-      message: 'Login realizado com sucesso!', 
-      user: req.session.user 
+    res.json({
+      message: 'Login realizado com sucesso!',
+      user: req.session.user
     });
   } catch (error) {
     console.error('Erro ao realizar login:', error);
@@ -136,9 +137,9 @@ app.post('/register', async (req, res) => {
       [username, email, password]
     );
 
-    res.status(201).json({ 
-      message: 'Usuário cadastrado com sucesso!', 
-      user: result.rows[0] 
+    res.status(201).json({
+      message: 'Usuário cadastrado com sucesso!',
+      user: result.rows[0]
     });
   } catch (error) {
     console.error('Erro ao cadastrar usuário:', error);
@@ -215,9 +216,9 @@ app.delete('/delete/:id', checkAuth, async (req, res) => {
       return res.status(404).send('Agendamento não encontrado');
     }
 
-    res.json({ 
-      message: 'Agendamento deletado', 
-      deleted: result.rows[0] 
+    res.json({
+      message: 'Agendamento deletado',
+      deleted: result.rows[0]
     });
   } catch (error) {
     console.error('Erro ao deletar agendamento:', error);
