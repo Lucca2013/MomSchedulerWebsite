@@ -5,10 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(response => response.json())
         .then(data => {
             if (!data.authenticated) {
-                // Não está logado - voltar para login
                 window.location.href = '/';
             } else {
-                // Mostrar dashboard
                 document.body.style.display = 'flex';
             }
         })
