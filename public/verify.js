@@ -1,14 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
   fetch('/auth/status', {
-    credentials: 'include' // IMPORTANTE: envia cookies
+    credentials: 'include' 
   })
     .then(response => response.json())
     .then(data => {
       if (data.authenticated) {
-        // Usuário já está logado - redirecionar
         window.location.href = '/loged/index.html';
       } else {
-        // Mostrar formulário de login normalmente
         document.body.style.display = 'flex';
       }
     })

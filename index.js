@@ -61,7 +61,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Middleware de autenticação simplificado
 app.use((req, res, next) => {
   req.authenticate = () => {
     return !!req.session.user && !!req.session.user.id;
@@ -69,7 +68,6 @@ app.use((req, res, next) => {
 
   req.login = (user) => {
     return new Promise((resolve, reject) => {
-      // Atualiza a sessão existente ao invés de regenerar
       req.session.user = {
         id: user.id,
         username: user.username,
@@ -95,7 +93,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Middleware de autenticação para rotas protegidas
 const checkAuth = (req, res, next) => {
   if (req.authenticate()) {
     next();
@@ -104,7 +101,6 @@ const checkAuth = (req, res, next) => {
   }
 };
 
-// Endpoint para verificar status de autenticação
 app.get('/auth/status', (req, res) => {
   const authenticated = req.authenticate();
   console.log(`Auth Status: ${authenticated}`, req.session.user);
@@ -114,7 +110,6 @@ app.get('/auth/status', (req, res) => {
   });
 });
 
-// Rota de debug para sessões
 app.get('/debug-session', (req, res) => {
   console.log('Sessão atual:', req.session);
   console.log('Session ID:', req.sessionID);
@@ -125,7 +120,6 @@ app.get('/debug-session', (req, res) => {
   });
 });
 
-// Rota principal
 app.get('/', (req, res) => {
   if (req.authenticate()) {
     res.sendFile(path.join(__dirname, 'public', 'loged', 'index.html'));
@@ -134,12 +128,10 @@ app.get('/', (req, res) => {
   }
 });
 
-// Rota para área logada
 app.get('/loged/index.html', checkAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'loged', 'index.html'));
 });
 
-// Rota de login corrigida
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -154,8 +146,6 @@ app.post('/login', async (req, res) => {
     if (!user || user.password !== password) {
       return res.status(401).json({ error: 'E-mail ou senha inválidos' });
     }
-
-    // Faz login usando a sessão existente
     await req.login({
       id: user.id,
       username: user.username,
@@ -175,7 +165,6 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// Rota de registro
 app.post('/register', async (req, res) => {
   const { username, email, password } = req.body;
 
@@ -204,7 +193,6 @@ app.post('/register', async (req, res) => {
   }
 });
 
-// Rota de logout corrigida
 app.post('/logout', async (req, res) => {
   try {
     await new Promise((resolve, reject) => {
@@ -228,7 +216,6 @@ app.post('/logout', async (req, res) => {
   }
 });
 
-// Rotas para tarefas (protegidas por autenticação)
 app.post('/agendar', checkAuth, async (req, res) => {
   const userId = req.session.user.id;
 
