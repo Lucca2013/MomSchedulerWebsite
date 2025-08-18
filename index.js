@@ -95,18 +95,21 @@ const resend = new Resend(process.env.EMAIL_API_KEY);
 
 async function sendEmail(subject, html, to) {
     try {
-        resend.emails.send({
-            from: 'onboarding@resend.dev',
-            to: to,
-            subject: subject,
-            html: html
+        const data = await resend.emails.send({
+            from: "onboarding@resend.dev",
+            to,
+            subject,
+            html,
         });
 
-        console.log('E-mail enviado com sucesso');
+        console.log("Resposta do Resend:", data);
+        return true;
     } catch (error) {
-        console.error('Erro ao enviar:', error);
+        console.error("Erro ao enviar:", error);
+        return false;
     }
 }
+
 
 app.get('/auth/status', (req, res) => {
     res.json({
@@ -214,9 +217,18 @@ app.post('/PasswordForgotten', async (req, res) => {
             resetLink = `http://localhost:${PORT}/resetar-senha?token=${token}`;
         }
 
-        sendEmail("Redefinição de Senha", `<p>Para redefinir sua senha, clique no link: <a href="${resetLink}">${resetLink}</a></p>`, email);
+        const ok = await sendEmail(
+            "Redefinição de Senha",
+            `<p>Para redefinir sua senha, clique no link: <a href="${resetLink}">${resetLink}</a></p>`,
+            email
+        );
 
-        console.log(`E-mail de redefinição enviado para ${email}`);
+        if (ok) {
+            res.json({ message: 'E-mail de redefinição enviado com sucesso para ' + email, success: true });
+        } else {
+            res.status(500).json({ error: 'Falha ao enviar e-mail', success: false });
+        }
+
         res.json({ message: 'E-mail de redefinição enviado com sucesso', success: true });
     } catch (error) {
         console.error('Erro ao enviar e-mail de redefinição de senha:', error);
