@@ -217,7 +217,7 @@ app.post('/PasswordForgotten', async (req, res) => {
         let resetLink = ``;
 
         if (process.env.NODE_ENV === 'production') {
-            resetLink = `https://${req.headers.host}/resetar-senha?token=${token}`;
+            resetLink = `https://mom-scheduler-website.vercel.app/resetar-senha?token=${token}`;
         } else {
             resetLink = `http://localhost:${PORT}/resetar-senha?token=${token}`;
         }
@@ -230,22 +230,6 @@ app.post('/PasswordForgotten', async (req, res) => {
         console.error('Erro ao enviar e-mail de redefinição de senha:', error);
         res.status(500).json({ error: 'Erro interno no servidor' });
     }
-});
-
-app.get('/resetar-senha/:token', (req, res) => {
-    const { token } = req.params;
-    if (!token) {
-        return res.status(400).send('Token de redefinição de senha ausente');
-    }
-
-    // Verificar a validade do token 
-    if (!isValidToken(token)) {
-        return res.status(400).send('Token de redefinição de senha inválido');
-    } else {
-        // Token é válido, renderizar a página de redefinição de senha
-        res.sendFile(path.join(__dirname, 'resetar-senha', 'index.html'));
-    }
-
 });
 
 app.post('/reset-password', async (req, res) => {
