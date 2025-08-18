@@ -116,6 +116,8 @@ async function sendEmail(subject, html, to) {
     }
 }
 
+sendEmail("teste", "<p>Este é um e-mail de teste</p>", "luccafelipetto@gmail.com");
+
 app.get('/auth/status', (req, res) => {
     res.json({
         authenticated: req.authenticate(),
