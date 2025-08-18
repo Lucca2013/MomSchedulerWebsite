@@ -96,7 +96,7 @@ const resend = new Resend(process.env.EMAIL_API_KEY);
 async function sendEmail(subject, html, to) {
     try {
         resend.emails.send({
-            from: process.env.EMAIL,
+            from: 'onboarding@resend.dev',
             to: to,
             subject: subject,
             html: html
