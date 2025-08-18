@@ -18,7 +18,8 @@
     "googleapis": "^156.0.0",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^7.0.5",
-    "pg": "^8.16.3"
+    "pg": "^8.16.3",
+    "resend": "^6.0.1"
   },
   "engines": {
     "node": "22.x"

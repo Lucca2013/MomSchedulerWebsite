@@ -6,7 +6,7 @@ const { Pool } = require('pg');
 require('dotenv').config();
 const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const { env } = require('process');
 const jwt = require('jsonwebtoken');
 const { composer } = require('googleapis/build/src/apis/composer');
@@ -31,7 +31,7 @@ const sessionConfig = {
         createTableIfMissing: true,
         pruneSessionInterval: 60
     }),
-    secret: process.env.SESSION_SECRET || '!SecretKey!!SecretKey!!SecretKey!!SecretKey!',
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -77,40 +77,32 @@ app.use(bodyParser.urlencoded({ extended: true }));
 function generateToken(userId) {
     return jwt.sign(
         { userId },
-        process.env.JWT_SECRET || '!SecretJWT!!SecretJWT!!SecretJWT!!SecretJWT!',
+        process.env.JWT_SECRET,
         { expiresIn: '1h' }
     );
 }
 
 function isValidToken(token) {
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || '!SecretJWT!!SecretJWT!!SecretJWT!!SecretJWT!');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         return !!decoded.userId;
     } catch (error) {
         return false;
     }
 }
 
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: {
-        user: process.env.EMAIL,
-        pass: process.env.EMAIL_APP_PASSWORD
-    }
-});
+const resend = new Resend(process.env.EMAIL_API_KEY);
 
 async function sendEmail(subject, html, to) {
     try {
-        const info = await transporter.sendMail({
-            from: env.EMAIL,
+        resend.emails.send({
+            from: process.env.EMAIL,
             to: to,
             subject: subject,
             html: html
         });
 
-        console.log('E-mail enviado: %s', info.messageId);
+        console.log('E-mail enviado com sucesso');
     } catch (error) {
         console.error('Erro ao enviar:', error);
     }
