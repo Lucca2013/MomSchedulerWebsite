@@ -32,7 +32,7 @@ Create a simple, A practical and accessible way to organize tasks, allowing anyo
 ## ⚡ How to run the project locally
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR-USER/mom-scheduler-website.git
+git clone https://github.com/Lucca2013/mom-scheduler-website.git
 
 # Enter the folder
 cd mom-scheduler-website
