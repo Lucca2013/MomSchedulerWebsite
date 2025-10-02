@@ -6,29 +6,29 @@ The project is hosted on Vercel:
 
 ---
 
-## 🚀 Technologies Used
+## Technologies Used
 - **Node.js (CommonJS)**
 - **Express.js**
 - **PostgreSQL** (database hosted with [Neon](https://neon.tech))
 
 ---
 
-## 🔑 Features
-✔️ User registration and login
-✔️ Password recovery (via email with [Resend](https://resend.com))
-✔️ Task management (add, view, and organize)
-✔️ Secure logout
-✔️ Session for loged accounts
+## Features
+User registration and login <br>
+Password recovery (via email with [Resend](https://resend.com)) <br>
+Task management (add, view, and organize) <br>
+Secure logout <br>
+Session for loged accounts <br>
 
 ---
 
-## 📌 Objective
+## Objective
 Create a simple, A practical and accessible way to organize tasks, allowing anyone to schedule their appointments intuitively.
 
 ---
 
 
-## ⚡ How to run the project locally
+## How to run the project locally
 ```bash
 # Clone the repository
 git clone https://github.com/Lucca2013/mom-scheduler-website.git
