@@ -1,4 +1,4 @@
-MomSchedulerWebsite 📅✨
+MomSchedulerWebsite 📅
 
 This is a **scheduling website** I developed for my mom — but it can be used by anyone.
 The project is hosted on Vercel:
@@ -8,8 +8,7 @@ The project is hosted on Vercel:
 
 ## 🚀 Technologies Used
 - **Node.js (CommonJS)**
-- **HTML5**
-- **CSS3**
+- **Express.js**
 - **PostgreSQL** (database hosted with [Neon](https://neon.tech))
 
 ---
