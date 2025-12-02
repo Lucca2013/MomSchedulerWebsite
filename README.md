@@ -16,7 +16,7 @@ The project is hosted on Vercel:
 
 ---
 
-## 🔑 Features
+## Features
 ✔️ User registration and login
 ✔️ Password recovery (via email with [Resend](https://resend.com))
 ✔️ Task management (CRUD)
@@ -25,13 +25,13 @@ The project is hosted on Vercel:
 
 ---
 
-## 📌 Objective
+##  Objective
 Create a simple, A practical and accessible way to organize tasks, allowing anyone to schedule their appointments intuitively.
 
 ---
 
 
-## ⚡ How to run the project locally
+##  How to run the project locally
 ```bash
 # Clone the repository
 git clone https://github.com/Lucca2013/mom-scheduler-website.git
