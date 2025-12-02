@@ -4,8 +4,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node api/server.js",
-    "dev": "node developementServer.js"
+    "dev": "node src/developementServer.js"
   },
   "dependencies": {
     "body-parser": "^1.20.3",
