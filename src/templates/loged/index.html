@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Tarefas</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 20px;
+        }
+
+        .main-content {
+            width: 100%;
+            max-width: 800px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+            padding: 20px;
+            color: #333;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            color: #4A00E0;
+        }
+
+        .calendar-header h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .calendar-header i {
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: color 0.2s;
+        }
+
+        .calendar-header i:hover {
+            color: #2575fc;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            text-align: center;
+        }
+
+        .calendar-grid .day-name {
+            font-weight: 600;
+            color: #777;
+            padding-bottom: 10px;
+        }
+
+        .calendar-grid .day {
+            position: relative;
+            overflow: visible;
+            height: 40px;
+            line-height: 40px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .calendar-grid .day:hover:not(.current-day) {
+            background-color: #e0e0e0;
+        }
+
+        .calendar-grid .day.current-month {
+            background: transparent;
+            color: #333;
+        }
+
+        .calendar-grid .day.current-day {
+            background-color: #8E2DE2;
+            color: white;
+            font-weight: 700;
+        }
+
+        .calendar-grid .day.other-month {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .container {
+            width: 100%;
+            max-width: none;
+        }
+
+        @media (max-width: 1100px) {
+            body {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .main-content,
+            .sidebar {
+                width: 100%;
+                max-width: 800px;
+            }
+        }
+
+        header {
+            background: linear-gradient(to right, #4A00E0, #8E2DE2);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .header-top h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 10px 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .logout-btn i {
+            font-size: 1.1rem;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 80%;
+            margin: 0 auto;
+        }
+        
+        .form-container {
+            padding: 30px;
+            border-bottom: 1px solid #eee;
+        }
+
+        #form-agendamento {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group.full {
+            grid-column: span 2;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #8E2DE2;
+            box-shadow: 0 0 0 3px rgba(142, 45, 226, 0.2);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        button[type="submit"] {
+            grid-column: span 2;
+            background: linear-gradient(to right, #4A00E0, #8E2DE2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 16px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        button[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(142, 45, 226, 0.4);
+        }
+
+        .tasks-container {
+            padding: 30px;
+        }
+
+        .tasks-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .tasks-header h2 {
+            color: #333;
+            font-size: 1.8rem;
+        }
+
+        .task-count {
+            background: #8E2DE2;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        li {
+            background: white;
+            margin-bottom: 15px;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #8E2DE2;
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+        }
+
+        li:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        li.completed {
+            border-left-color: #00c853;
+            background: #f8fff8;
+        }
+
+        li.completed .task-title {
+            text-decoration: line-through;
+            color: #777;
+        }
+
+        li.completed .task-description {
+            color: #999;
+        }
+
+        .task-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #4A00E0;
+            margin-bottom: 8px;
+        }
+
+        .task-description {
+            color: #555;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .task-date {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #777;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .task-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-delete {
+            background: #ff5252;
+            color: white;
+        }
+
+        .btn-complete {
+            background: #00c853;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: scale(1.05);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #777;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: #e0e0e0;
+            margin-bottom: 15px;
+        }
+
+        .empty-state p {
+            font-size: 1.1rem;
+        }
+
+        .task-priority {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .priority-high {
+            background: #ff5252;
+            color: white;
+        }
+
+        .priority-medium {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .priority-low {
+            background: #00c853;
+            color: white;
+        }
+
+        .calendar-grid .day.has-task {
+            background-color: #ffcc00;
+            color: #000;
+            font-weight: bold;
+        }
+
+        .calendar-grid .day {
+            position: relative;
+            overflow: visible;
+        }
+
+        .calendar-grid .day.has-tasks::after {
+            content: "";
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #8E2DE2;
+            position: absolute;
+            bottom: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .calendar-grid .day.open .tasks-wrapper {
+            display: block;
+        }
+
+        .calendar-grid .day .tasks-wrapper .task-info {
+            background: #fff;
+            border-radius: 6px;
+            padding: 6px 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, .12);
+            font-size: 12px;
+        }
+
+        .calendar-grid .day .tasks-wrapper .task-info+.task-info {
+            margin-top: 6px;
+        }
+
+
+        .task-info {
+            background: white;
+            border-radius: 6px;
+            padding: 4px;
+            font-size: 11px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+
+
+        .task-info strong {
+            display: block;
+            margin-bottom: 5px;
+            color: #4A00E0;
+        }
+
+        .task-info p {
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        .task-info span {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.7rem;
+        }
+
+        .priority-high {
+            background: #ff5252;
+            color: white;
+        }
+
+        .priority-medium {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .priority-low {
+            background: #00c853;
+            color: white;
+        }
+
+        .tasks-container-tooltip {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translate(-50%, 10%);
+            z-index: 999;
+            min-width: 150px;
+            max-width: 200px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            padding: 10px;
+        }
+
+        .day {
+            position: relative;
+        }
+
+        @media (max-width: 650px) {
+            #form-agendamento {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group.full {
+                grid-column: span 1;
+            }
+
+            button[type="submit"] {
+                grid-column: span 1;
+            }
+
+            .header-top h1 {
+                font-size: 1.8rem;
+            }
+
+            .logout-btn span {
+                display: none;
+            }
+
+            .logout-btn {
+                padding: 10px;
+            }
+
+            .logout-btn i {
+                font-size: 1.3rem;
+            }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: #00c853;
+        }
+
+        .notification.error {
+            background: #ff5252;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #4A00E0;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .logout-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .logout-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-content h3 {
+            margin-bottom: 20px;
+            color: #4A00E0;
+            font-size: 1.5rem;
+        }
+
+        .modal-content p {
+            margin-bottom: 25px;
+            color: #555;
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .modal-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .modal-btn.cancel {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .modal-btn.confirm {
+            background: #4A00E0;
+            color: white;
+        }
+
+        .modal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main-content">
+        <div class="container">
+            <div class="notification" id="notification"></div>
+
+            <header>
+                <div class="header-top">
+                    <h1><i class="fas fa-tasks"></i> Sistema de Tarefas</h1>
+                    <button id="logout-btn" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Sair</span>
+                    </button>
+                </div>
+
+                <p>Organize suas tarefas com título, descrição e data de conclusão</p>
+            </header>
+
+            <div class="form-container">
+                <form id="form-agendamento">
+                    <div class="form-group full">
+                        <label id="title-label" for="input-title">Título</label>
+                        <input type="text" name="titulo" id="input-title" placeholder="Nome da tarefa" required>
+                    </div>
+
+                    <div class="form-group full">
+                        <label id="description-label" for="input-desc">Descrição</label>
+                        <textarea name="descricao" id="input-desc" placeholder="Detalhes da tarefa" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label id="date-label" for="input-date">Data</label>
+                        <input type="datetime-local" name="data" id="input-date" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label id="priority-label" for="input-priority">Prioridade</label>
+                        <select name="prioridade" id="input-priority" class="form-control">
+                            <option value="alta">Alta</option>
+                            <option value="media" selected>Média</option>
+                            <option value="baixa">Baixa</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" id="submit-btn">
+                        <i class="fas fa-plus-circle"></i>
+                        <span id="add-task-text">Adicionar Tarefa</span>
+                    </button>
+                </form>
+            </div>
+
+            <div class="tasks-container">
+                <div class="tasks-header">
+                    <h2 id="tasks-title"><i class="fas fa-list-check"></i> Tarefas Agendadas</h2>
+                    <div class="task-count">
+                        <span id="task-count">0</span> tarefas
+                    </div>
+                </div>
+
+                <ul id="lista-tarefas">
+                    <div class="loading" id="loading">
+                        <div class="spinner"></div>
+                    </div>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <div class="calendar-header">
+            <i id="prev-month" class="fas fa-chevron-left"></i>
+            <h3 id="current-month-year">Mês e Ano</h3>
+            <i id="next-month" class="fas fa-chevron-right"></i>
+        </div>
+        <div class="calendar-grid" id="calendar-grid">
+        </div>
+    </div>
+
+</html>
+
+<script type="module" src="loged/js/main.js"></script>

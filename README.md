@@ -1,15 +1,17 @@
-MomSchedulerWebsite 📅✨
+# MomSchedulerWebsite 2.0.0
 
 This is a **scheduling website** I developed for my mom — but it can be used by anyone.
 The project is hosted on Vercel:
-👉 [Access here](https://mom-scheduler-website.vercel.app/) *(in Portuguese)*
+👉 [Access here](https://mom-scheduler-website.vercel.app/) 
 
 ---
 
 ## 🚀 Technologies Used
-- **Node.js (CommonJS)**
-- **HTML5**
-- **CSS3**
+- **Node.js**
+- **Express.js**
+- **JWT** (only for reset-password emails)
+- **Resend** (for sending emails)
+- **HTML5 & CSS3**
 - **PostgreSQL** (database hosted with [Neon](https://neon.tech))
 
 ---
@@ -17,9 +19,9 @@ The project is hosted on Vercel:
 ## 🔑 Features
 ✔️ User registration and login
 ✔️ Password recovery (via email with [Resend](https://resend.com))
-✔️ Task management (add, view, and organize)
-✔️ Secure logout
-✔️ Session for loged accounts
+✔️ Task management (CRUD)
+✔️ logout
+✔️ Session for loged accounts (express-session with postgresql)
 
 ---
 

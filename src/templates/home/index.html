@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MomScheduler</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 450px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+        overflow: hidden;
+      }
+
+      header {
+        background: linear-gradient(to right, #4a00e0, #8e2de2);
+        color: white;
+        padding: 25px 30px;
+        text-align: center;
+        position: relative;
+      }
+
+      header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+      }
+
+      header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+      }
+
+      .form-container {
+        padding: 30px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #333;
+      }
+
+      input {
+        width: 100%;
+        padding: 14px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+      }
+
+      input:focus {
+        outline: none;
+        border-color: #8e2de2;
+        box-shadow: 0 0 0 3px rgba(142, 45, 226, 0.2);
+      }
+
+      button[type="submit"] {
+        background: linear-gradient(to right, #4a00e0, #8e2de2);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 16px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        margin-top: 10px;
+      }
+
+      button[type="submit"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(142, 45, 226, 0.4);
+      }
+
+      .toggle-form {
+        text-align: center;
+        margin-top: 20px;
+        color: #555;
+      }
+
+      .toggle-form a {
+        color: #4a00e0;
+        text-decoration: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .toggle-form a:hover {
+        text-decoration: underline;
+      }
+
+      .divider {
+        display: flex;
+        align-items: center;
+        margin: 20px 0;
+      }
+
+      .divider::before,
+      .divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: #e0e0e0;
+      }
+
+      .divider span {
+        padding: 0 15px;
+        color: #777;
+        font-size: 0.9rem;
+      }
+
+      .social-login {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+      }
+
+      .social-btn {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .social-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .social-btn.google {
+        background: #db4437;
+      }
+
+      .social-btn.facebook {
+        background: #4267b2;
+      }
+
+      .social-btn.twitter {
+        background: #1da1f2;
+      }
+
+      .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 25px;
+        border-radius: 10px;
+        color: white;
+        font-weight: 600;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+        opacity: 0;
+        transform: translateX(100%);
+        transition: all 0.3s ease;
+      }
+
+      .notification.show {
+        opacity: 1;
+        transform: translateX(0);
+      }
+
+      .notification.success {
+        background: #00c853;
+      }
+
+      .notification.error {
+        background: #ff5252;
+      }
+
+      .login-container,
+      .register-container {
+        display: none;
+      }
+
+      .login-container.active,
+      .register-container.active {
+        display: block;
+        animation: fadeIn 0.5s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .password-container {
+        position: relative;
+      }
+
+      .password-toggle {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #777;
+      }
+
+      @media (max-width: 480px) {
+        header h1 {
+          font-size: 2rem;
+        }
+
+        .form-container {
+          padding: 20px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="notification" id="notification"></div>
+
+      <header>
+        <h1 data-translate="headerTitle">
+          <i class="fas fa-user-lock"></i>
+        </h1>
+        <p data-translate="headerSubtitle">
+        </p>
+      </header>
+
+      <div class="form-container">
+        <div class="login-container active" id="login-container">
+          <form id="login-form">
+            <div class="form-group">
+              <label for="login-email" data-translate="emailLabel"
+                ></label
+              >
+              <input
+                type="email"
+                id="login-email"
+                data-translate="emailPlaceholder"
+                data-translate-type="placeholder"
+                placeholder="seuemail@exemplo.com"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="login-password" data-translate="passwordLabel"
+                ></label
+              >
+              <div class="password-container">
+                <input
+                  type="password"
+                  id="login-password"
+                  data-translate="loginPasswordPlaceholder"
+                  data-translate-type="placeholder"
+                  placeholder="Sua senha"
+                  required
+                />
+                <i
+                  class="fas fa-eye password-toggle"
+                  id="login-password-toggle"
+                ></i>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <button type="submit">
+                <i class="fas fa-sign-in-alt"></i>
+                <span data-translate="loginButton"></span>
+              </button>
+            </div>
+
+            <div class="toggle-form">
+              <span data-translate="noAccountText"></span>
+              <a id="show-register" data-translate="registerLink"></a>
+            </div>
+
+            <div class="toggle-form">
+              <span data-translate="forgotPasswordText"
+                ></span
+              >
+              <a id="show-register" data-translate="recoverPasswordLink" href="/password-forgotten"
+                ></a
+              >
+            </div>
+          </form>
+        </div>
+
+        <div class="register-container" id="register-container">
+          <form id="register-form">
+            <div class="form-group">
+              <label for="register-name" data-translate="registerNameLabel"></label>
+              <input
+                type="text"
+                id="register-name"
+                placeholder=""
+                data-translate="registerNameLabelInput"
+                data-translate-type="placeholder"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="register-email" data-translate="registerEmailLabel"></label>
+              <input
+                type="email"
+                id="register-email"
+                placeholder=""
+                data-translate="registerEmailLabelInput"
+                data-translate-type="placeholder"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="register-password" data-translate="registerPasswordLabel"></label>
+              <div class="password-container">
+                <input
+                  type="password"
+                  id="register-password"
+                  placeholder=""
+                  data-translate="registerPasswordLabelInput"
+                  data-translate-type="placeholder"
+                  required
+                />
+                <i
+                  class="fas fa-eye password-toggle"
+                  id="register-password-toggle"
+                ></i>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="register-confirm" data-translate="registerConfirmPasswordLabel"></label>
+              <div class="password-container">
+                <input
+                  type="password"
+                  id="register-confirm"
+                  placeholder=""
+                  data-translate="registerConfirmPasswordLabelInput"
+                  data-translate-type="placeholder"
+                  required
+                />
+                <i
+                  class="fas fa-eye password-toggle"
+                  id="register-confirm-toggle"
+                ></i>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <button type="submit">
+                <i class="fas fa-user-plus"></i> <span data-translate="ConfirmRegister"></span>
+              </button>
+            </div>
+
+            <div class="toggle-form">
+              <span data-translate="alreadyAccountText"></span> 
+              <a id="show-login">Log in</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script src="home/js/language.js"></script>
+    <script src="home/js/main.js"></script>
+  </body>
+</html>
