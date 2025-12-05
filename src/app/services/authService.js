@@ -27,7 +27,7 @@ export default {
 
     const link =
       process.env.NODE_ENV === "production"
-        ? `https://seuapp.com/reset-password?token=${token}`
+        ? `https://mom-scheduler-website.vercel.app/reset-password?token=${token}`
         : `http://localhost:3000/reset-password?token=${token}`;
 
     await sendEmail(
